@@ -615,7 +615,7 @@
 
     try {
       await poll();
-      pollTimer = setInterval(poll, 4000);
+      pollTimer = setInterval(poll, 1500);
     } catch {
       // interview not found — go home
       location.hash = '';
