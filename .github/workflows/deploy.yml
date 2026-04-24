@@ -5,9 +5,9 @@ on:
     branches: [main]
 
 env:
-  REGION:   europe-west1
+  REGION:   europe-west3
   SERVICE:  unbias
-  REGISTRY: europe-west1-docker.pkg.dev
+  REGISTRY: europe-west3-docker.pkg.dev
 
 jobs:
   deploy:
