@@ -360,6 +360,20 @@
     }
     .spinner.visible { display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    .privacy-footer {
+      margin-top: 2.4rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .privacy-footer a {
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .privacy-footer a:hover { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -404,6 +418,8 @@
         <div id="join-error" class="error-msg">Session not found. Please check the token.</div>
         <button class="btn btn-outline" id="btn-join">Join interview session</button>
       </div>
+
+      <p class="privacy-footer"><a href="/privacy">Data &amp; Privacy</a></p>
     </div>
 
     <!-- ═══════════════════════════════════════════════════
@@ -483,6 +499,7 @@
         <div id="results-votes"></div>
       </div>
 
+      <p class="privacy-footer"><a href="/privacy">Data &amp; Privacy</a></p>
     </div>
   </div>
 </div>
