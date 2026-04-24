@@ -59,8 +59,10 @@ if (process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT) {
       const { candidateFirstName, revealed, expiresAt } = doc.data();
       if (expiresAt && expiresAt.toDate() < new Date()) return null;
       const votesSnap = await db.collection('interviews')
-        .doc(token).collection('votes').orderBy('submittedAt').get();
-      const votes = votesSnap.docs.map(d => d.data());
+        .doc(token).collection('votes').get();
+      const votes = votesSnap.docs
+        .map(d => d.data())
+        .sort((a, b) => (a.submittedAt?.seconds ?? 0) - (b.submittedAt?.seconds ?? 0));
       return { candidateFirstName, revealed, votes };
     },
     async addVote(token, vote) {
