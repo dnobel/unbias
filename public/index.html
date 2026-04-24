@@ -380,8 +380,10 @@
 <div class="page">
 
   <header>
-    <div class="logo-mark">U</div>
-    <div class="logo-text">un<span>bias</span></div>
+    <div style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;" onclick="goHome()">
+      <div class="logo-mark">U</div>
+      <div class="logo-text">un<span>bias</span></div>
+    </div>
   </header>
 
   <!-- ═══════════════════════════════════════════════════
@@ -517,6 +519,13 @@
   const $  = id => document.getElementById(id);
   const show = el => el.style.display = '';
   const hide = el => el.style.display = 'none';
+
+  function goHome() {
+    clearInterval(pollTimer);
+    currentToken = null;
+    location.hash = '';
+    showView('home');
+  }
 
   function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
