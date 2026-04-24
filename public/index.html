@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unbias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Tokens ───────────────────────────────────────────────────── */
+    :root {
+      --bg:          #0c0c14;
+      --surface:     #13131e;
+      --card:        #1a1a28;
+      --card-hi:     #20202f;
+      --border:      #2a2a3e;
+      --text:        #e8e8f0;
+      --muted:       #6b6b8a;
+      --accent:      #7c6af7;
+      --accent-dim:  rgba(124,106,247,0.12);
+      --accent-glow: rgba(124,106,247,0.25);
+      --green:       #10b981;
+      --green-dim:   rgba(16,185,129,0.12);
+      --amber:       #f59e0b;
+      --amber-dim:   rgba(245,158,11,0.12);
+      --orange:      #f97316;
+      --orange-dim:  rgba(249,115,22,0.12);
+      --red:         #ef4444;
+      --red-dim:     rgba(239,68,68,0.12);
+      --radius:      10px;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.6; }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 1.5rem 4rem; }
+
+    header {
+      width: 100%; max-width: 640px;
+      padding: 2.4rem 0 2rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .logo-mark {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; color: #fff; letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .logo-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.3px; }
+    .logo-text span { color: var(--accent); }
+
+    .container { width: 100%; max-width: 640px; }
+
+    /* ── Views ────────────────────────────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Typography ───────────────────────────────────────────────── */
+    h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 1.2rem; }
+    .lead { color: var(--muted); font-size: 0.93rem; margin-bottom: 2rem; }
+
+    /* ── Card ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Divider ──────────────────────────────────────────────────── */
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      color: var(--muted); font-size: 0.8rem;
+      margin: 1.4rem 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── Form elements ────────────────────────────────────────────── */
+    label {
+      display: block;
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px; text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 1.2rem;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .field { margin-bottom: 0.2rem; }
+
+    /* ── Buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      font-family: inherit; font-size: 0.93rem; font-weight: 600;
+      padding: 0.75rem 1.4rem;
+      border-radius: 8px; border: none; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover  { opacity: 0.88; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text); width: 100%;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+
+    .btn-danger { background: var(--red); color: #fff; width: 100%; margin-top: 0.5rem; }
+    .btn-reveal { background: var(--accent); color: #fff; width: 100%; margin-top: 0.5rem; font-size: 1rem; padding: 0.9rem; }
+
+    /* ── Rating selector ──────────────────────────────────────────── */
+    .rating-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .rating-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.3rem;
+      padding: 0.75rem 0.3rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .rating-btn:hover { border-color: var(--muted); }
+
+    .rating-btn .emoji { font-size: 1.4rem; }
+    .rating-btn .label {
+      font-size: 0.65rem; font-weight: 600;
+      text-align: center; line-height: 1.2;
+      color: var(--muted);
+    }
+
+    .rating-btn[data-rating="5"].selected { border-color: var(--green);  background: var(--green-dim);  }
+    .rating-btn[data-rating="4"].selected { border-color: #34d399;        background: rgba(52,211,153,0.10); }
+    .rating-btn[data-rating="3"].selected { border-color: var(--amber);   background: var(--amber-dim);  }
+    .rating-btn[data-rating="2"].selected { border-color: var(--orange);  background: var(--orange-dim); }
+    .rating-btn[data-rating="1"].selected { border-color: var(--red);     background: var(--red-dim);    }
+
+    .rating-btn[data-rating="5"].selected .label { color: var(--green);  }
+    .rating-btn[data-rating="4"].selected .label { color: #34d399;        }
+    .rating-btn[data-rating="3"].selected .label { color: var(--amber);   }
+    .rating-btn[data-rating="2"].selected .label { color: var(--orange);  }
+    .rating-btn[data-rating="1"].selected .label { color: var(--red);     }
+
+    /* ── Status bar ───────────────────────────────────────────────── */
+    .status-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+
+    .candidate-name { font-weight: 700; font-size: 1.1rem; }
+    .token-pill {
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.72rem; font-weight: 600;
+      padding: 0.25em 0.7em;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .vote-count {
+      font-size: 0.88rem; color: var(--muted);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .vote-count .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Copy link ────────────────────────────────────────────────── */
+    .link-row {
+      display: flex; gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+    .link-box {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-copy {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.8rem; font-weight: 600;
+      padding: 0 1rem;
+      cursor: pointer; white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Voted confirmation ───────────────────────────────────────── */
+    .voted-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--green-dim);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: var(--green);
+      font-size: 0.8rem; font-weight: 600;
+      padding: 0.35em 0.8em;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Results ──────────────────────────────────────────────────── */
+    .results-header {
+      text-align: center;
+      padding: 1.8rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+
+    .results-header .verdict-label {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .results-header h2 { margin-bottom: 0.3rem; font-size: 1.4rem; }
+
+    .distribution {
+      display: flex; gap: 0.4rem; margin-top: 1.2rem;
+    }
+    .dist-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 0.4rem;
+    }
+    .dist-bar-wrap {
+      width: 100%; height: 60px;
+      display: flex; align-items: flex-end;
+    }
+    .dist-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      transition: height 0.4s ease;
+      min-height: 4px;
+    }
+    .dist-bar.r5 { background: var(--green); }
+    .dist-bar.r4 { background: #34d399; }
+    .dist-bar.r3 { background: var(--amber); }
+    .dist-bar.r2 { background: var(--orange); }
+    .dist-bar.r1 { background: var(--red); }
+    .dist-label { font-size: 0.65rem; color: var(--muted); text-align: center; line-height: 1.2; }
+    .dist-count { font-size: 0.8rem; font-weight: 700; }
+
+    /* ── Vote cards ───────────────────────────────────────────────── */
+    .vote-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.8rem;
+      margin-bottom: 0.8rem;
+    }
+    .vote-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .voter-name { font-weight: 600; font-size: 0.95rem; }
+    .rating-badge {
+      font-size: 0.75rem; font-weight: 700;
+      padding: 0.25em 0.75em;
+      border-radius: 20px;
+    }
+    .rb-5 { background: var(--green-dim);          color: var(--green);  }
+    .rb-4 { background: rgba(52,211,153,0.12);     color: #34d399;        }
+    .rb-3 { background: var(--amber-dim);           color: var(--amber);  }
+    .rb-2 { background: var(--orange-dim);          color: var(--orange); }
+    .rb-1 { background: var(--red-dim);             color: var(--red);    }
+
+    .vote-fields { display: flex; flex-direction: column; gap: 0.7rem; }
+    .vote-field-label {
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--muted); margin-bottom: 0.2rem;
+    }
+    .vote-field-value { font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+    .vote-field-empty { font-size: 0.88rem; color: var(--muted); font-style: italic; }
+
+    /* ── Error / info ─────────────────────────────────────────────── */
+    .error-msg {
+      background: var(--red-dim);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 8px;
+      color: var(--red);
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    .info-msg {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-glow);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Spinner ──────────────────────────────────────────────────── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .spinner.visible { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo-mark">U</div>
+    <div class="logo-text">un<span>bias</span></div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════
+       HOME VIEW
+  ═══════════════════════════════════════════════════ -->
+  <div class="container">
+    <div id="view-home" class="view active">
+      <h1>Unbiased hiring,<br/>one panel at a time.</h1>
+      <p class="lead">Create a session, share the link, collect honest ratings — then reveal together.</p>
+
+      <!-- Create -->
+      <div class="card">
+        <h2>Start a new interview</h2>
+        <div class="field">
+          <label for="candidate-name">Candidate first name</label>
+          <input type="text" id="candidate-name" placeholder="e.g. Anna" autocomplete="off" />
+        </div>
+        <div id="create-error" class="error-msg">Please enter the candidate's first name.</div>
+        <button class="btn btn-primary" id="btn-create">
+          <span id="create-spinner" class="spinner"></span>
+          Create interview session
+        </button>
+      </div>
+
+      <div class="divider">or join an existing one</div>
+
+      <!-- Join -->
+      <div class="card">
+        <h2>Join with a token</h2>
+        <div class="field">
+          <label for="join-token">Session token</label>
+          <input type="text" id="join-token" placeholder="e.g. brave-lion-42" autocomplete="off" />
+        </div>
+        <div id="join-error" class="error-msg">Session not found. Please check the token.</div>
+        <button class="btn btn-outline" id="btn-join">Join interview session</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         INTERVIEW VIEW
+    ═══════════════════════════════════════════════════ -->
+    <div id="view-interview" class="view">
+
+      <!-- Status bar (always visible) -->
+      <div class="status-bar">
+        <div class="status-top">
+          <div class="candidate-name" id="iv-candidate"></div>
+          <div class="token-pill" id="iv-token"></div>
+        </div>
+        <div class="vote-count">
+          <span class="dot" id="iv-dot"></span>
+          <span id="iv-count">0 people have voted</span>
+        </div>
+        <div class="link-row">
+          <div class="link-box" id="iv-link"></div>
+          <button class="btn-copy" id="btn-copy">Copy link</button>
+        </div>
+      </div>
+
+      <!-- Vote form (pre-vote state) -->
+      <div id="panel-form" class="card">
+        <h2>Your evaluation</h2>
+
+        <div class="field">
+          <label for="voter-name">Your name</label>
+          <input type="text" id="voter-name" placeholder="First name" autocomplete="off" />
+        </div>
+
+        <label>Your verdict</label>
+        <div class="rating-grid">
+          <div class="rating-btn" data-rating="5"><span class="emoji">🟢</span><span class="label">Strong Yes</span></div>
+          <div class="rating-btn" data-rating="4"><span class="emoji">✅</span><span class="label">Yes</span></div>
+          <div class="rating-btn" data-rating="3"><span class="emoji">🤔</span><span class="label">Unsure</span></div>
+          <div class="rating-btn" data-rating="2"><span class="emoji">❌</span><span class="label">No</span></div>
+          <div class="rating-btn" data-rating="1"><span class="emoji">🔴</span><span class="label">Strong No</span></div>
+        </div>
+
+        <div class="field">
+          <label for="f-positive">Positives</label>
+          <textarea id="f-positive" placeholder="What stood out positively?"></textarea>
+        </div>
+        <div class="field">
+          <label for="f-negative">Concerns</label>
+          <textarea id="f-negative" placeholder="Any concerns or reservations?"></textarea>
+        </div>
+        <div class="field">
+          <label for="f-misc">Other notes</label>
+          <textarea id="f-misc" placeholder="Anything else worth noting?"></textarea>
+        </div>
+
+        <div id="form-error" class="error-msg"></div>
+        <button class="btn btn-primary" id="btn-submit">
+          <span id="submit-spinner" class="spinner"></span>
+          Submit my evaluation
+        </button>
+      </div>
+
+      <!-- Waiting state (post-vote, pre-reveal) -->
+      <div id="panel-waiting" style="display:none;">
+        <div class="voted-badge">✓ Your evaluation has been submitted</div>
+        <div class="info-msg">Waiting for others to vote. Press Reveal when everyone is ready.</div>
+        <button class="btn btn-reveal" id="btn-reveal">Reveal all votes</button>
+      </div>
+
+      <!-- Revealed state -->
+      <div id="panel-results" style="display:none;">
+        <div class="results-header">
+          <div class="verdict-label">The Verdict</div>
+          <h2 id="results-candidate"></h2>
+          <div id="results-summary"></div>
+          <div class="distribution" id="results-dist"></div>
+        </div>
+        <div id="results-votes"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ────────────────────────────────────────────────────────
+  let currentToken  = null;
+  let selectedRating = null;
+  let pollTimer     = null;
+  let hasVoted      = false;
+
+  const LABELS = { 5: 'Strong Yes', 4: 'Yes', 3: 'Unsure', 2: 'No', 1: 'Strong No' };
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  const $  = id => document.getElementById(id);
+  const show = el => el.style.display = '';
+  const hide = el => el.style.display = 'none';
+
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    $(`view-${name}`).classList.add('active');
+  }
+
+  function voteKey(token) { return `unbias_voted_${token}`; }
+
+  async function api(method, path, body) {
+    const res = await fetch(path, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
+  // ── Routing ──────────────────────────────────────────────────────
+  function readHash() {
+    const hash = location.hash.replace('#', '').trim();
+    if (hash) openInterview(hash);
+  }
+
+  window.addEventListener('hashchange', readHash);
+
+  // ── Home view ────────────────────────────────────────────────────
+  $('btn-create').addEventListener('click', async () => {
+    const name = $('candidate-name').value.trim();
+    if (!name) { $('create-error').classList.add('visible'); return; }
+    $('create-error').classList.remove('visible');
+    $('create-spinner').classList.add('visible');
+    $('btn-create').disabled = true;
+    try {
+      const { token } = await api('POST', '/api/interviews', { candidateFirstName: name });
+      location.hash = token;
+    } catch {
+      $('create-error').textContent = 'Something went wrong. Please try again.';
+      $('create-error').classList.add('visible');
+    } finally {
+      $('create-spinner').classList.remove('visible');
+      $('btn-create').disabled = false;
+    }
+  });
+
+  $('btn-join').addEventListener('click', async () => {
+    const token = $('join-token').value.trim().toLowerCase();
+    if (!token) return;
+    try {
+      await api('GET', `/api/interviews/${token}`);
+      location.hash = token;
+    } catch {
+      $('join-error').classList.add('visible');
+    }
+  });
+
+  $('candidate-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-create').click(); });
+  $('join-token').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-join').click(); });
+
+  // ── Rating buttons ───────────────────────────────────────────────
+  document.querySelectorAll('.rating-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedRating = Number(btn.dataset.rating);
+    });
+  });
+
+  // ── Open interview ────────────────────────────────────────────────
+  async function openInterview(token) {
+    clearInterval(pollTimer);
+    currentToken   = token;
+    selectedRating = null;
+    hasVoted       = localStorage.getItem(voteKey(token)) === 'true';
+
+    showView('interview');
+    $('iv-token').textContent = token;
+    const link = `${location.origin}/#${token}`;
+    $('iv-link').textContent = link;
+
+    try {
+      await poll();
+      pollTimer = setInterval(poll, 4000);
+    } catch {
+      // interview not found — go home
+      location.hash = '';
+      showView('home');
+      $('join-error').classList.add('visible');
+    }
+  }
+
+  // ── Poll for state ───────────────────────────────────────────────
+  async function poll() {
+    const data = await api('GET', `/api/interviews/${currentToken}`);
+
+    // Update header
+    $('iv-candidate').textContent = data.candidateFirstName;
+    const n = data.voteCount;
+    $('iv-count').textContent = n === 0
+      ? 'No votes yet'
+      : `${n} ${n === 1 ? 'person has' : 'people have'} voted`;
+
+    if (data.revealed) {
+      clearInterval(pollTimer);
+      renderResults(data);
+      return;
+    }
+
+    // Pre-reveal panels
+    if (hasVoted) {
+      hide($('panel-form'));
+      show($('panel-waiting'));
+      hide($('panel-results'));
+    } else {
+      show($('panel-form'));
+      hide($('panel-waiting'));
+      hide($('panel-results'));
+    }
+  }
+
+  // ── Submit vote ──────────────────────────────────────────────────
+  $('btn-submit').addEventListener('click', async () => {
+    const name = $('voter-name').value.trim();
+    const err  = $('form-error');
+
+    if (!name) {
+      err.textContent = 'Please enter your name.';
+      err.classList.add('visible'); return;
+    }
+    if (!selectedRating) {
+      err.textContent = 'Please select a rating.';
+      err.classList.add('visible'); return;
+    }
+    err.classList.remove('visible');
+
+    $('submit-spinner').classList.add('visible');
+    $('btn-submit').disabled = true;
+
+    try {
+      await api('POST', `/api/interviews/${currentToken}/votes`, {
+        voterName: name,
+        rating:    selectedRating,
+        positive:  $('f-positive').value.trim(),
+        negative:  $('f-negative').value.trim(),
+        misc:      $('f-misc').value.trim()
+      });
+      localStorage.setItem(voteKey(currentToken), 'true');
+      hasVoted = true;
+      await poll();
+    } catch (e) {
+      err.textContent = e.message || 'Could not submit. Please try again.';
+      err.classList.add('visible');
+    } finally {
+      $('submit-spinner').classList.remove('visible');
+      $('btn-submit').disabled = false;
+    }
+  });
+
+  // ── Reveal ───────────────────────────────────────────────────────
+  $('btn-reveal').addEventListener('click', async () => {
+    $('btn-reveal').disabled = true;
+    try {
+      await api('POST', `/api/interviews/${currentToken}/reveal`);
+      await poll();
+    } catch {
+      $('btn-reveal').disabled = false;
+    }
+  });
+
+  // ── Render results ───────────────────────────────────────────────
+  function renderResults(data) {
+    hide($('panel-form'));
+    hide($('panel-waiting'));
+    show($('panel-results'));
+    hide($('iv-dot'));
+
+    $('results-candidate').textContent = data.candidateFirstName;
+
+    const votes  = data.votes || [];
+    const avg    = votes.length ? (votes.reduce((s, v) => s + v.rating, 0) / votes.length) : 0;
+    const counts = { 5:0, 4:0, 3:0, 2:0, 1:0 };
+    votes.forEach(v => counts[v.rating]++);
+    const maxCount = Math.max(...Object.values(counts), 1);
+
+    // Summary
+    $('results-summary').textContent =
+      `${votes.length} ${votes.length === 1 ? 'evaluation' : 'evaluations'} · Average ${avg.toFixed(1)} / 5`;
+
+    // Distribution bars
+    const dist = $('results-dist');
+    dist.innerHTML = '';
+    [5,4,3,2,1].forEach(r => {
+      const pct   = Math.round((counts[r] / maxCount) * 100);
+      const short = { 5:'Strong Yes', 4:'Yes', 3:'Unsure', 2:'No', 1:'Strong No' };
+      dist.innerHTML += `
+        <div class="dist-item">
+          <div class="dist-count">${counts[r]}</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar r${r}" style="height:${pct}%"></div>
+          </div>
+          <div class="dist-label">${short[r]}</div>
+        </div>`;
+    });
+
+    // Vote cards
+    const container = $('results-votes');
+    container.innerHTML = '';
+    votes.forEach(v => {
+      container.innerHTML += `
+        <div class="vote-card">
+          <div class="vote-card-header">
+            <div class="voter-name">${esc(v.voterName)}</div>
+            <div class="rating-badge rb-${v.rating}">${LABELS[v.rating]}</div>
+          </div>
+          <div class="vote-fields">
+            <div>
+              <div class="vote-field-label">Positives</div>
+              ${v.positive
+                ? `<div class="vote-field-value">${esc(v.positive)}</div>`
+                : `<div class="vote-field-empty">Nothing noted</div>`}
+            </div>
+            <div>
+              <div class="vote-field-label">Concerns</div>
+              ${v.negative
+                ? `<div class="vote-field-value">${esc(v.negative)}</div>`
+                : `<div class="vote-field-empty">Nothing noted</div>`}
+            </div>
+            <div>
+              <div class="vote-field-label">Other notes</div>
+              ${v.misc
+                ? `<div class="vote-field-value">${esc(v.misc)}</div>`
+                : `<div class="vote-field-empty">Nothing noted</div>`}
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // ── Copy link ────────────────────────────────────────────────────
+  $('btn-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(`${location.origin}/#${currentToken}`).then(() => {
+      $('btn-copy').textContent = 'Copied!';
+      setTimeout(() => $('btn-copy').textContent = 'Copy link', 2000);
+    });
+  });
+
+  // ── XSS-safe escape ─────────────────────────────────────────────
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────
+  readHash();
+</script>
+</body>
+</html>
