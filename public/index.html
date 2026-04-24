@@ -390,7 +390,7 @@
        HOME VIEW
   ═══════════════════════════════════════════════════ -->
   <div class="container">
-    <div id="view-home" class="view active">
+    <div id="view-home" class="view">
       <h1>Unbiased hiring,<br/>one panel at a time.</h1>
       <p class="lead">Create a session, share the link, collect honest ratings — then reveal together.</p>
 
@@ -549,6 +549,7 @@
   function readHash() {
     const hash = location.hash.replace('#', '').trim();
     if (hash) openInterview(hash);
+    else showView('home');
   }
 
   window.addEventListener('hashchange', readHash);
@@ -601,6 +602,11 @@
     currentToken   = token;
     selectedRating = null;
     hasVoted       = localStorage.getItem(voteKey(token)) === 'true';
+
+    // Set panel state immediately from localStorage — prevents flicker
+    hide($('panel-results'));
+    if (hasVoted) { hide($('panel-form')); show($('panel-waiting')); }
+    else          { show($('panel-form')); hide($('panel-waiting')); }
 
     showView('interview');
     $('iv-token').textContent = token;
