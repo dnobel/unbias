@@ -488,6 +488,15 @@
         <div class="voted-badge">✓ Your evaluation has been submitted</div>
         <div class="info-msg">Waiting for others to vote. Press Reveal when everyone is ready.</div>
         <button class="btn btn-reveal" id="btn-reveal">Reveal all votes</button>
+
+        <!-- Reveal confirmation (shown in place of btn-reveal) -->
+        <div id="reveal-confirm" style="display:none;">
+          <div class="card" style="margin-top:0.5rem;">
+            <p style="font-size:0.95rem;margin-bottom:1.2rem;" id="reveal-confirm-msg"></p>
+            <button class="btn btn-danger" id="btn-reveal-confirm">Yes, reveal all votes</button>
+            <button class="btn btn-outline" id="btn-reveal-cancel" style="margin-top:0.5rem;">Cancel</button>
+          </div>
+        </div>
       </div>
 
       <!-- Revealed state -->
@@ -605,13 +614,16 @@
     selectedRating = null;
     hasVoted       = localStorage.getItem(voteKey(token)) === 'true';
 
-    // Clear vote form for this new session
+    // Clear vote form and reveal confirm state for this new session
     $('voter-name').value  = '';
     $('f-positive').value  = '';
     $('f-negative').value  = '';
     $('f-misc').value      = '';
     document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
     $('form-error').classList.remove('visible');
+    hide($('reveal-confirm'));
+    show($('btn-reveal'));
+    $('btn-reveal-confirm').disabled = false;
 
     // Set panel state immediately from localStorage — prevents flicker
     hide($('panel-results'));
@@ -702,13 +714,27 @@
   });
 
   // ── Reveal ───────────────────────────────────────────────────────
-  $('btn-reveal').addEventListener('click', async () => {
-    $('btn-reveal').disabled = true;
+  $('btn-reveal').addEventListener('click', () => {
+    const n = parseInt($('iv-count').textContent) || 0;
+    const noun = n === 1 ? 'person has' : 'people have';
+    $('reveal-confirm-msg').textContent =
+      `${n === 0 ? 'Nobody has' : `${n} ${noun}`} voted. Once revealed, votes are visible to everyone with the link and cannot be hidden again. Are you sure?`;
+    hide($('btn-reveal'));
+    show($('reveal-confirm'));
+  });
+
+  $('btn-reveal-cancel').addEventListener('click', () => {
+    hide($('reveal-confirm'));
+    show($('btn-reveal'));
+  });
+
+  $('btn-reveal-confirm').addEventListener('click', async () => {
+    $('btn-reveal-confirm').disabled = true;
     try {
       await api('POST', `/api/interviews/${currentToken}/reveal`);
       await poll();
     } catch {
-      $('btn-reveal').disabled = false;
+      $('btn-reveal-confirm').disabled = false;
     }
   });
 
