@@ -717,7 +717,7 @@
   $('btn-reveal').addEventListener('click', () => {
     const n = parseInt($('iv-count').textContent) || 0;
     const noun = n === 1 ? 'person has' : 'people have';
-    const who = n === 0 ? 'Nobody has' : `<strong>${n} ${noun}</strong>`;
+    const who = n === 0 ? 'Nobody has' : `<strong>${n}</strong> ${noun}`;
     $('reveal-confirm-msg').innerHTML =
       `${who} voted. Once revealed, votes are visible to everyone with the link and cannot be hidden again. Are you sure?`;
     hide($('btn-reveal'));
