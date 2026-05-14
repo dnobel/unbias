@@ -456,11 +456,11 @@
 
         <label>Your verdict</label>
         <div class="rating-grid">
-          <div class="rating-btn" data-rating="5"><span class="emoji">🟢</span><span class="label">Strong Yes</span></div>
-          <div class="rating-btn" data-rating="4"><span class="emoji">✅</span><span class="label">Yes</span></div>
-          <div class="rating-btn" data-rating="3"><span class="emoji">🤔</span><span class="label">Unsure</span></div>
-          <div class="rating-btn" data-rating="2"><span class="emoji">❌</span><span class="label">No</span></div>
-          <div class="rating-btn" data-rating="1"><span class="emoji">🔴</span><span class="label">Strong No</span></div>
+          <div class="rating-btn" data-rating="5" tabindex="0" role="radio" aria-label="Strong Yes"><span class="emoji">🟢</span><span class="label">Strong Yes</span></div>
+          <div class="rating-btn" data-rating="4" tabindex="0" role="radio" aria-label="Yes"><span class="emoji">✅</span><span class="label">Yes</span></div>
+          <div class="rating-btn" data-rating="3" tabindex="0" role="radio" aria-label="Unsure"><span class="emoji">🤔</span><span class="label">Unsure</span></div>
+          <div class="rating-btn" data-rating="2" tabindex="0" role="radio" aria-label="No"><span class="emoji">❌</span><span class="label">No</span></div>
+          <div class="rating-btn" data-rating="1" tabindex="0" role="radio" aria-label="Strong No"><span class="emoji">🔴</span><span class="label">Strong No</span></div>
         </div>
 
         <div class="field">
@@ -589,11 +589,13 @@
 
   // ── Rating buttons ───────────────────────────────────────────────
   document.querySelectorAll('.rating-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    const select = () => {
       document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedRating = Number(btn.dataset.rating);
-    });
+    };
+    btn.addEventListener('click', select);
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); } });
   });
 
   // ── Open interview ────────────────────────────────────────────────
@@ -602,6 +604,14 @@
     currentToken   = token;
     selectedRating = null;
     hasVoted       = localStorage.getItem(voteKey(token)) === 'true';
+
+    // Clear vote form for this new session
+    $('voter-name').value  = '';
+    $('f-positive').value  = '';
+    $('f-negative').value  = '';
+    $('f-misc').value      = '';
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+    $('form-error').classList.remove('visible');
 
     // Set panel state immediately from localStorage — prevents flicker
     hide($('panel-results'));
